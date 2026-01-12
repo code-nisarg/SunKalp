@@ -27,7 +27,7 @@ const CONFIG = {
     voltage: 250,      // High limit
     current: 15,       // High limit
     temperature: 50,   // High limit
-    battery: 20,       // Low limit
+    humidity: 20,      // Low limit (was Battery)
   },
   checkInterval: 60000, // Check every 60 seconds
   cooldown: 30 * 60 * 1000, // 30 minutes in milliseconds
@@ -46,7 +46,7 @@ const lastNotificationTime = {
   voltage: 0,
   current: 0,
   temperature: 0,
-  battery: 0,
+  humidity: 0,
 };
 
 // Helper function to send SMS
@@ -86,11 +86,11 @@ const checkSensors = async () => {
       // Parse values (ThingSpeak returns strings)
       const voltage = Number(latest.field1) || 0;
       const current = Number(latest.field2) || 0;
-      const soc = Number(latest.field3) || 0; // Battery State of Charge
+      const humidity = Number(latest.field3) || 0; // Was Battery, now Humidity
       // Field 4 is Load Power, not alerting on it based on requirements
       const temperature = Number(latest.field5) || 0;
 
-      console.log(`[${new Date().toISOString()}] Telemetry - V: ${voltage}, I: ${current}, SOC: ${soc}%, T: ${temperature}°C`);
+      console.log(`[${new Date().toISOString()}] Telemetry - V: ${voltage}, I: ${current}, Humidity: ${humidity}%, T: ${temperature}°C`);
 
       // Check Voltage (High Limit)
       if (voltage > CONFIG.limits.voltage) {
@@ -104,7 +104,7 @@ const checkSensors = async () => {
       // Check Current (High Limit)
       if (current > CONFIG.limits.current) {
         if (now - lastNotificationTime.current > CONFIG.cooldown) {
-          const msg = `SYSTEM ALERT: High Current detected! Reading: ${current}A (Limit: ${CONFIG.limits.current}A)`;
+          const msg = `SYSTEM ALERT: High Current detected! Reading: ${current}mA (Limit: ${CONFIG.limits.current}mA)`;
           await sendSMS(msg);
           lastNotificationTime.current = now;
         }
@@ -119,12 +119,12 @@ const checkSensors = async () => {
         }
       }
 
-      // Check Battery (Low Limit) - Only alert if soc > 0 to avoid false positives on disconnected sensors
-      if (soc < CONFIG.limits.battery && soc > 0) {
-        if (now - lastNotificationTime.battery > CONFIG.cooldown) {
-          const msg = `SYSTEM ALERT: Low Battery detected! Level: ${soc}% (Limit: ${CONFIG.limits.battery}%)`;
+      // Check Humidity (Low Limit) - Only alert if humidity > 0 to avoid false positives on disconnected sensors
+      if (humidity < CONFIG.limits.humidity && humidity > 0) {
+        if (now - lastNotificationTime.humidity > CONFIG.cooldown) {
+          const msg = `SYSTEM ALERT: Low Humidity detected! Level: ${humidity}% (Limit: ${CONFIG.limits.humidity}%)`;
           await sendSMS(msg);
-          lastNotificationTime.battery = now;
+          lastNotificationTime.humidity = now;
         }
       }
 

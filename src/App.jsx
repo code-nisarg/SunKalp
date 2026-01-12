@@ -31,16 +31,18 @@ const translations = {
     lastSynced: "Last synced",
     voltage: "Voltage",
     current: "Current",
-    battery: "Battery SOC",
+    humidity: "Humidity",
+    lightIntensity: "Light Intensity",
+    panelTemperature: "Panel Temperature",
     temperature: "Temperature",
-    power: "Power Consumption",
+    powerOutput: "Power Output",
     systemAlert: "SYSTEM ALERT",
     systemOnline: "System Online",
     disconnect: "Disconnect",
     alerts: {
       voltage: "High Voltage",
       current: "High Current",
-      battery: "Low Battery",
+      humidity: "Low Humidity",
       temperature: "High Temperature",
     }
   },
@@ -58,16 +60,18 @@ const translations = {
     lastSynced: "अंतिम अपडेट",
     voltage: "वोल्टेज",
     current: "करंट",
-    battery: "बैटरी स्तर",
+    humidity: "आर्द्रता",
+    lightIntensity: "प्रकाश तीव्रता",
+    panelTemperature: "पैनल तापमान",
     temperature: "तापमान",
-    power: "पावर खपत",
+    powerOutput: "पावर आउटपुट",
     systemAlert: "सिस्टम चेतावनी",
     systemOnline: "सिस्टम ऑनलाइन",
     disconnect: "डिस्कनेक्ट करें",
     alerts: {
       voltage: "उच्च वोल्टेज",
       current: "उच्च करंट",
-      battery: "कम बैटरी",
+      humidity: "कम आर्द्रता",
       temperature: "उच्च तापमान",
     }
   }
@@ -93,6 +97,12 @@ const Icons = {
   ),
   Alert: () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+  ),
+  Droplet: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+  ),
+  Sun: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
   )
 };
 
@@ -101,8 +111,8 @@ const LIMITS = {
   voltage: 250,
   current: 15,
   temperature: 50,
-  battery: 20
-  // Note: Battery is a LOWER limit, others are UPPER limits
+  humidity: 20
+  // Note: Humidity (was Battery) is a LOWER limit, others are UPPER limits
 };
 
 /* ===================== UI COMPONENTS ===================== */
@@ -131,7 +141,7 @@ const StatCard = ({ title, value, unit, icon: Icon, color, subtext }) => (
   </div>
 );
 
-const ChartBox = ({ title, data, dataKey, color }) => {
+const ChartBox = ({ title, data, dataKey, color, unit }) => {
   return (
     <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all h-full min-h-[320px]">
       <div className="flex justify-between items-center mb-6">
@@ -169,6 +179,7 @@ const ChartBox = ({ title, data, dataKey, color }) => {
               }}
               itemStyle={{ color: color.hex, fontWeight: 600 }}
               labelStyle={{ color: "#64748b", marginBottom: "5px" }}
+              formatter={(value) => [`${value} ${unit || ''}`, title]}
             />
             <Area
               type="monotone"
@@ -230,16 +241,16 @@ function MicrogridDashboard() {
       notify(t.alerts.voltage, `${latest.voltage}V`);
     }
     if (latest.current > LIMITS.current) {
-      newAlerts.push(`${t.alerts.current}: ${latest.current}A`);
-      notify(t.alerts.current, `${latest.current}A`);
+      newAlerts.push(`${t.alerts.current}: ${latest.current}mA`);
+      notify(t.alerts.current, `${latest.current}mA`);
     }
     if (latest.temperature > LIMITS.temperature) {
       newAlerts.push(`${t.alerts.temperature}: ${latest.temperature}°C`);
       notify(t.alerts.temperature, `${latest.temperature}°C`);
     }
-    if (latest.soc < LIMITS.battery && latest.soc > 0) {
-      newAlerts.push(`${t.alerts.battery}: ${latest.soc}%`);
-      notify(t.alerts.battery, `${latest.soc}%`);
+    if (latest.soc < LIMITS.humidity && latest.soc > 0) {
+      newAlerts.push(`${t.alerts.humidity}: ${latest.soc}%`);
+      notify(t.alerts.humidity, `${latest.soc}%`);
     }
 
     setAlerts(newAlerts);
@@ -293,8 +304,8 @@ function MicrogridDashboard() {
           time: new Date(f.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           voltage: Number(f.field1) || 0,
           current: Number(f.field2) || 0,
-          soc: Number(f.field3) || 0,
-          loadPower: Number(f.field4) || 0,
+          soc: Number(f.field3) || 0, // Used for Humidity (Param) & Panel Temp (Graph)
+          loadPower: Number(f.field4) || 0, // Used for Power Output
           temperature: Number(f.field5) || 0,
         }));
 
@@ -482,19 +493,20 @@ function MicrogridDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           <StatCard title={t.voltage} value={latest.voltage} unit="V" icon={Icons.Zap} color={{ bg: "bg-red-50", text: "text-red-500" }} />
-          <StatCard title={t.current} value={latest.current} unit="A" icon={Icons.Activity} color={{ bg: "bg-blue-50", text: "text-blue-500" }} />
-          <StatCard title={t.battery} value={latest.soc} unit="%" icon={Icons.Battery} color={{ bg: "bg-emerald-50", text: "text-emerald-500" }} />
+          <StatCard title={t.current} value={latest.current} unit="mA" icon={Icons.Activity} color={{ bg: "bg-blue-50", text: "text-blue-500" }} />
+          <StatCard title={t.humidity} value={latest.soc} unit="%" icon={Icons.Droplet} color={{ bg: "bg-emerald-50", text: "text-emerald-500" }} />
           <StatCard title={t.temperature} value={latest.temperature} unit="°C" icon={Icons.Thermometer} color={{ bg: "bg-orange-50", text: "text-orange-500" }} subtext="Internal Sensor" />
+          <StatCard title={t.powerOutput} value={latest.loadPower} unit="W" icon={Icons.Sun} color={{ bg: "bg-purple-50", text: "text-purple-500" }} />
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartBox title={t.voltage} data={data} dataKey="voltage" color={{ hex: "#ef4444", bg: "bg-red-50" }} unit="V" />
-          <ChartBox title={t.current} data={data} dataKey="current" color={{ hex: "#3b82f6", bg: "bg-blue-50" }} unit="A" />
-          <ChartBox title={t.battery} data={data} dataKey="soc" color={{ hex: "#10b981", bg: "bg-emerald-50" }} unit="%" />
-          <ChartBox title={t.power} data={data} dataKey="loadPower" color={{ hex: "#a855f7", bg: "bg-purple-50" }} unit="W" />
+          <ChartBox title={t.lightIntensity} data={data} dataKey="current" color={{ hex: "#3b82f6", bg: "bg-blue-50" }} unit="" />
+          <ChartBox title={t.panelTemperature} data={data} dataKey="soc" color={{ hex: "#10b981", bg: "bg-emerald-50" }} unit="°C" />
+          <ChartBox title={t.powerOutput} data={data} dataKey="loadPower" color={{ hex: "#a855f7", bg: "bg-purple-50" }} unit="W" />
         </div>
       </main>
     </div>
