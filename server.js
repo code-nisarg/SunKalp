@@ -89,11 +89,6 @@ const checkSensors = async () => {
 
       console.log(`[${new Date().toISOString()}] Telemetry - V: ${voltage}, Light: ${lightIntensity}, Humidity: ${humidity}%, T: ${temperature}°C`);
 
-      // Check Voltage (High Limit) - Log only
-      if (voltage > CONFIG.limits.voltage) {
-        console.log(`ALERT: High Voltage detected! Reading: ${voltage}V (Limit: ${CONFIG.limits.voltage}V)`);
-      }
-
       // Check Light Intensity (Low Limit) - SMS Alert
       if (lightIntensity < CONFIG.limits.lightIntensity) {
         if (now - lastNotificationTime.lightIntensity > CONFIG.cooldown) {
@@ -101,16 +96,6 @@ const checkSensors = async () => {
           await sendSMS(msg);
           lastNotificationTime.lightIntensity = now;
         }
-      }
-
-      // Check Temperature (High Limit) - Log only
-      if (temperature > CONFIG.limits.temperature) {
-        console.log(`ALERT: High Temperature detected! Reading: ${temperature}°C (Limit: ${CONFIG.limits.temperature}°C)`);
-      }
-
-      // Check Humidity (High Limit) - Log only
-      if (humidity > CONFIG.limits.humidity) {
-        console.log(`ALERT: High Humidity detected! Level: ${humidity}% (Limit: ${CONFIG.limits.humidity}%)`);
       }
 
     }
