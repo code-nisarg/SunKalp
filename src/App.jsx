@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
@@ -96,8 +96,18 @@ const Icons = {
   )
 };
 
+/* ===================== THRESHOLDS ===================== */
+const LIMITS = {
+  voltage: 250,
+  current: 15,
+  temperature: 50,
+  battery: 20
+  // Note: Battery is a LOWER limit, others are UPPER limits
+};
+
 /* ===================== UI COMPONENTS ===================== */
 
+// eslint-disable-next-line no-unused-vars
 const StatCard = ({ title, value, unit, icon: Icon, color, subtext }) => (
   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group">
     <div className="flex justify-between items-start mb-4">
@@ -121,7 +131,7 @@ const StatCard = ({ title, value, unit, icon: Icon, color, subtext }) => (
   </div>
 );
 
-const ChartBox = ({ title, data, dataKey, color, unit }) => {
+const ChartBox = ({ title, data, dataKey, color }) => {
   return (
     <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all h-full min-h-[320px]">
       <div className="flex justify-between items-center mb-6">
@@ -196,15 +206,6 @@ function MicrogridDashboard() {
   const [isConnected, setIsConnected] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  /* ---------- THRESHOLDS ---------- */
-  const LIMITS = {
-    voltage: 250,
-    current: 15,
-    temperature: 50,
-    battery: 20
-  };
 
   /* ---------- NOTIFICATIONS ---------- */
   useEffect(() => {
@@ -213,13 +214,13 @@ function MicrogridDashboard() {
     }
   }, []);
 
-  const notify = (title, body) => {
+  const notify = useCallback((title, body) => {
     if (Notification.permission === "granted") {
       new Notification(title, { body, icon: logo });
     }
-  };
+  }, []);
 
-  const checkEmergencies = (latest) => {
+  const checkEmergencies = useCallback((latest) => {
     if (!latest) return;
     const newAlerts = [];
 
@@ -242,7 +243,7 @@ function MicrogridDashboard() {
     }
 
     setAlerts(newAlerts);
-  };
+  }, [t, notify]);
 
   /* ---------- HANDLERS ---------- */
   const handleGoogleSuccess = (credentialResponse) => {
@@ -280,9 +281,8 @@ function MicrogridDashboard() {
   };
 
   /* ---------- FETCH DATA ---------- */
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!channelId || !apiKey) return;
-    setLoading(true);
     try {
       const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&results=15`;
       const res = await fetch(url);
@@ -305,16 +305,16 @@ function MicrogridDashboard() {
     } catch (err) {
       console.error("Error fetching data", err);
     }
-    setLoading(false);
-  };
+  }, [channelId, apiKey, checkEmergencies]);
 
   useEffect(() => {
     if (isConnected) {
+      // eslint-disable-next-line
       fetchData();
       const i = setInterval(fetchData, 10000);
       return () => clearInterval(i);
     }
-  }, [isConnected]);
+  }, [isConnected, fetchData]);
 
   const latest = data.length > 0 ? data[data.length - 1] : {};
 
