@@ -44,7 +44,6 @@ if (CONFIG.twilio.accountSid && CONFIG.twilio.authToken) {
 // State to track last notification times
 const lastNotificationTime = {
   lightIntensity: 0,
-  humidity: 0,
 };
 
 // Helper function to send SMS
@@ -109,13 +108,9 @@ const checkSensors = async () => {
         console.log(`ALERT: High Temperature detected! Reading: ${temperature}°C (Limit: ${CONFIG.limits.temperature}°C)`);
       }
 
-      // Check Humidity (High Limit) - SMS Alert
+      // Check Humidity (High Limit) - Log only
       if (humidity > CONFIG.limits.humidity) {
-        if (now - lastNotificationTime.humidity > CONFIG.cooldown) {
-          const msg = `--- Welcome to SUNकल्प --- ALERT!!! High Humidity detected. Level: ${humidity}%.`;
-          await sendSMS(msg);
-          lastNotificationTime.humidity = now;
-        }
+        console.log(`ALERT: High Humidity detected! Level: ${humidity}% (Limit: ${CONFIG.limits.humidity}%)`);
       }
 
     }
