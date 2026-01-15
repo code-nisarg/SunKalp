@@ -497,15 +497,15 @@ function MicrogridDashboard() {
           <StatCard title={t.lightIntensity} value={latest.lightIntensity} unit="lux" icon={Icons.Activity} color={{ bg: "bg-blue-50", text: "text-blue-500" }} />
           <StatCard title={t.humidity} value={latest.soc} unit="%" icon={Icons.Droplet} color={{ bg: "bg-emerald-50", text: "text-emerald-500" }} />
           <StatCard title={t.temperature} value={latest.temperature} unit="°C" icon={Icons.Thermometer} color={{ bg: "bg-orange-50", text: "text-orange-500" }} subtext="Internal Sensor" />
-          <StatCard title={t.powerOutput} value={latest.loadPower} unit="W" icon={Icons.Sun} color={{ bg: "bg-purple-50", text: "text-purple-500" }} />
+          <StatCard title={t.powerOutput} value={latest.loadPower} unit="mW" icon={Icons.Sun} color={{ bg: "bg-purple-50", text: "text-purple-500" }} />
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartBox title={t.voltage} data={data} dataKey="voltage" color={{ hex: "#ef4444", bg: "bg-red-50" }} unit="V" />
           <ChartBox title={t.lightIntensity} data={data} dataKey="lightIntensity" color={{ hex: "#3b82f6", bg: "bg-blue-50" }} unit="lux" />
-          <ChartBox title={t.panelTemperature} data={data} dataKey="soc" color={{ hex: "#10b981", bg: "bg-emerald-50" }} unit="°C" />
-          <ChartBox title={t.powerOutput} data={data} dataKey="loadPower" color={{ hex: "#a855f7", bg: "bg-purple-50" }} unit="W" />
+          <ChartBox title={t.panelTemperature} data={data} dataKey="temperature" color={{ hex: "#10b981", bg: "bg-orange-50" }} unit="°C" />
+          <ChartBox title={t.powerOutput} data={data} dataKey="loadPower" color={{ hex: "#a855f7", bg: "bg-purple-50" }} unit="mW" />
         </div>
       </main>
     </div>
