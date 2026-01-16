@@ -25,7 +25,7 @@ const CONFIG = {
   },
   limits: {
     voltage: 15,          // High limit
-    lightIntensity: 100,  // Low limit (was Current)
+    lightIntensity: 500,  // Low limit (was Current)
     temperature: 40,      // High limit
     humidity: 80,         // High limit
   },
@@ -44,6 +44,7 @@ if (CONFIG.twilio.accountSid && CONFIG.twilio.authToken) {
 // State to track last notification times
 const lastNotificationTime = {
   lightIntensity: 0,
+  humidity: 0,
 };
 
 // Helper function to send SMS
@@ -95,6 +96,15 @@ const checkSensors = async () => {
           const msg = `--- Welcome to SUNकल्प --- ALERT!!! The panel is not receiving sufficient light. Please check for any obstruction around the panel.`;
           await sendSMS(msg);
           lastNotificationTime.lightIntensity = now;
+        }
+      }
+
+      // Check Humidity (High Limit) - SMS Alert
+      if (humidity > CONFIG.limits.humidity) {
+        if (now - lastNotificationTime.humidity > CONFIG.cooldown) {
+          const msg = `--- Welcome to SUNकल्प --- ALERT!!! The humidity levels are too high. Please check the system environment.`;
+          await sendSMS(msg);
+          lastNotificationTime.humidity = now;
         }
       }
 

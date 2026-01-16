@@ -109,7 +109,7 @@ const Icons = {
 /* ===================== THRESHOLDS ===================== */
 const LIMITS = {
   voltage: 15,
-  lightIntensity: 100,
+  lightIntensity: 500,
   temperature: 40,
   humidity: 80
 };
@@ -302,7 +302,7 @@ function MicrogridDashboard() {
         const formatted = json.feeds.map(f => ({
           time: new Date(f.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           voltage: Number(f.field1) || 0,
-          lightIntensity: Number(f.field2) || 0, // Renamed from current
+          lightIntensity: Math.round(Number(f.field2) || 0), // Renamed from current
           soc: Number(f.field3) || 0, // Used for Humidity (Param) & Panel Temp (Graph)
           loadPower: Number(f.field4) || 0, // Used for Power Output
           temperature: Number(f.field5) || 0,
