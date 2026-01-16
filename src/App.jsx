@@ -109,7 +109,7 @@ const Icons = {
 /* ===================== THRESHOLDS ===================== */
 const LIMITS = {
   voltage: 15,
-  lightIntensity: 100,
+  lightIntensity: 500,
   temperature: 40,
   humidity: 80
 };
