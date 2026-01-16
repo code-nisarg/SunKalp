@@ -25,7 +25,7 @@ const CONFIG = {
   },
   limits: {
     voltage: 15,          // High limit
-    lightIntensity: 100,  // Low limit (was Current)
+    lightIntensity: 500,  // Low limit (was Current)
     temperature: 40,      // High limit
     humidity: 80,         // High limit
   },
